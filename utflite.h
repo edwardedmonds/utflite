@@ -185,12 +185,12 @@ int utflite_codepoint_count(const char *text, int length);
 int utflite_string_width(const char *text, int length);
 
 /*
- * Checks if a codepoint is a combining mark (zero-width).
+ * Checks if a codepoint is zero-width (combining marks, format chars, ZWJ, etc).
  *
  * Returns:
  *   1 if codepoint is zero-width, 0 otherwise.
  */
-int utflite_is_combining(uint32_t codepoint);
+int utflite_is_zero_width(uint32_t codepoint);
 
 /*
  * Checks if a codepoint is double-width (CJK, emoji, etc).
@@ -401,6 +401,10 @@ static const utflite__unicode_range UTFLITE__ZERO_WIDTH_RANGES[] = {
     {0x1CF8, 0x1CF9},   /* Vedic tones */
     {0x1DC0, 0x1DF9},   /* Combining Diacritical Marks Supplement */
     {0x1DFB, 0x1DFF},   /* Combining marks */
+    {0x200B, 0x200F},   /* Zero-width space, joiners, direction marks */
+    {0x202A, 0x202E},   /* Bidi formatting characters */
+    {0x2060, 0x2064},   /* Word joiner, invisible operators */
+    {0x2066, 0x206F},   /* Bidi isolates */
     {0x20D0, 0x20F0},   /* Combining Diacritical Marks for Symbols */
     {0x2CEF, 0x2CF1},   /* Coptic combining marks */
     {0x2D7F, 0x2D7F},   /* Tifinagh consonant joiner */
@@ -564,10 +568,6 @@ static const utflite__unicode_range UTFLITE__ZERO_WIDTH_RANGES[] = {
     {0x1E8D0, 0x1E8D6}, /* Mende Kikakui combining marks */
     {0x1E944, 0x1E94A}, /* Adlam modifiers */
     {0xE0100, 0xE01EF}, /* Variation Selectors Supplement */
-    {0x200B, 0x200F},   /* Zero-width space, joiners, direction marks */
-    {0x202A, 0x202E},   /* Bidi formatting characters */
-    {0x2060, 0x2064},   /* Word joiner, invisible operators */
-    {0x2066, 0x206F},   /* Bidi isolates */
 };
 #define UTFLITE__ZERO_WIDTH_COUNT (sizeof(UTFLITE__ZERO_WIDTH_RANGES) / sizeof(UTFLITE__ZERO_WIDTH_RANGES[0]))
 
@@ -730,6 +730,10 @@ static int utflite__unicode_range_contains(uint32_t codepoint,
     return 0;
 }
 
+/*
+ * Error handling strategy: consume minimal bytes for structural errors,
+ * consume full sequence for semantic errors.
+ */
 int utflite_decode(const char *bytes, int length, uint32_t *codepoint) {
     if (length <= 0 || bytes == NULL) {
         *codepoint = UTFLITE_REPLACEMENT_CHAR;
@@ -861,16 +865,29 @@ int utflite_prev_char(const char *text, int offset) {
         return 0;
     }
     int pos = offset - 1;
-    while (pos > 0 && ((unsigned char)text[pos] & 0xC0) == 0x80) {
+    int limit = (offset > 4) ? offset - 4 : 0;
+    while (pos > limit && ((unsigned char)text[pos] & 0xC0) == 0x80) {
         pos--;
     }
     return pos;
 }
 
+/*
+ * WARNING: Grapheme cluster segmentation is NOT implemented.
+ * This function currently just advances by one codepoint.
+ * Multi-codepoint graphemes (emoji sequences, combining characters)
+ * will not be handled correctly.
+ */
 int utflite_next_grapheme(const char *text, int length, int offset) {
     return utflite_next_char(text, length, offset);
 }
 
+/*
+ * WARNING: Grapheme cluster segmentation is NOT implemented.
+ * This function currently just advances by one codepoint.
+ * Multi-codepoint graphemes (emoji sequences, combining characters)
+ * will not be handled correctly.
+ */
 int utflite_prev_grapheme(const char *text, int offset) {
     return utflite_prev_char(text, offset);
 }
@@ -919,7 +936,7 @@ int utflite_string_width(const char *text, int length) {
     return width;
 }
 
-int utflite_is_combining(uint32_t codepoint) {
+int utflite_is_zero_width(uint32_t codepoint) {
     return utflite__unicode_range_contains(codepoint, UTFLITE__ZERO_WIDTH_RANGES, UTFLITE__ZERO_WIDTH_COUNT);
 }
 

@@ -288,10 +288,35 @@ TEST(string_width) {
     ASSERT_EQ(utflite_string_width("A\xE4\xB8\xAD", 4), 3);  /* A + CJK */
 }
 
-TEST(is_combining) {
-    ASSERT_EQ(utflite_is_combining(0x0300), 1);   /* Combining grave */
-    ASSERT_EQ(utflite_is_combining(0x0041), 0);   /* 'A' */
-    ASSERT_EQ(utflite_is_combining(0xFE0F), 1);   /* Variation selector */
+TEST(is_zero_width) {
+    ASSERT_EQ(utflite_is_zero_width(0x0300), 1);   /* Combining grave */
+    ASSERT_EQ(utflite_is_zero_width(0x0041), 0);   /* 'A' */
+    ASSERT_EQ(utflite_is_zero_width(0xFE0F), 1);   /* Variation selector */
+}
+
+TEST(zero_width_bidi_chars) {
+    /* Verify binary search finds zero-width chars after table sort fix */
+    ASSERT_EQ(utflite_is_zero_width(0x200B), 1);   /* Zero-width space */
+    ASSERT_EQ(utflite_is_zero_width(0x200D), 1);   /* Zero-width joiner (ZWJ) */
+    ASSERT_EQ(utflite_is_zero_width(0x202A), 1);   /* Left-to-right embedding */
+    ASSERT_EQ(utflite_is_zero_width(0x2060), 1);   /* Word joiner */
+    ASSERT_EQ(utflite_is_zero_width(0x2066), 1);   /* Left-to-right isolate */
+    ASSERT_EQ(utflite_codepoint_width(0x200B), 0); /* Zero-width space = 0 cols */
+    ASSERT_EQ(utflite_codepoint_width(0x200D), 0); /* ZWJ = 0 cols */
+}
+
+TEST(prev_char_bounded_scan) {
+    /* Create malformed input: 10 continuation bytes (0x80) */
+    char malformed[11];
+    for (int i = 0; i < 10; i++) {
+        malformed[i] = (char)0x80;
+    }
+    malformed[10] = '\0';
+
+    /* Starting at offset 10, should not scan more than 4 bytes back */
+    /* With limit, it should stop at offset 6 (10 - 4), not 0 */
+    int result = utflite_prev_char(malformed, 10);
+    ASSERT(result >= 6);  /* Should be bounded to at most 4 bytes back */
 }
 
 TEST(is_wide) {
@@ -360,7 +385,9 @@ int main(void) {
     RUN(validate_invalid);
     RUN(codepoint_count);
     RUN(string_width);
-    RUN(is_combining);
+    RUN(is_zero_width);
+    RUN(zero_width_bidi_chars);
+    RUN(prev_char_bounded_scan);
     RUN(is_wide);
     RUN(truncate);
 
