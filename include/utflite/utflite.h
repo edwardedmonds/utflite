@@ -5,7 +5,7 @@
  * Zero external dependencies beyond standard C.
  *
  * Usage:
- *   #include "utflite.h"
+ *   #include <utflite/utflite.h>
  *
  * Or use the single-header version:
  *   #define UTFLITE_IMPLEMENTATION
@@ -173,12 +173,12 @@ int utflite_codepoint_count(const char *text, int length);
 int utflite_string_width(const char *text, int length);
 
 /*
- * Checks if a codepoint is a combining mark (zero-width).
+ * Checks if a codepoint is zero-width (combining marks, format chars, ZWJ, etc).
  *
  * Returns:
  *   1 if codepoint is zero-width, 0 otherwise.
  */
-int utflite_is_combining(uint32_t codepoint);
+int utflite_is_zero_width(uint32_t codepoint);
 
 /*
  * Checks if a codepoint is double-width (CJK, emoji, etc).

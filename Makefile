@@ -8,46 +8,58 @@ PREFIX = /usr/local
 INCLUDEDIR = $(PREFIX)/include
 LIBDIR = $(PREFIX)/lib
 
-SRC = src/utflite.c
-OBJ = src/utflite.o
-LIB = libutflite.a
-HEADER = src/utflite.h
+# Directories
+SRCDIR = src
+INCDIR = include
+BUILDDIR = build
+TESTDIR = test
+SINGLE_HEADER_DIR = single_include
+
+# Files
+SRC = $(SRCDIR)/utflite.c
+OBJ = $(BUILDDIR)/utflite.o
+LIB = $(BUILDDIR)/libutflite.a
+HEADER = $(INCDIR)/utflite/utflite.h
+SINGLE_HEADER = $(SINGLE_HEADER_DIR)/utflite.h
 
 .PHONY: all clean install uninstall test test-single debug
 
 all: $(LIB)
 
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
+
 $(LIB): $(OBJ)
 	$(AR) $(ARFLAGS) $@ $^
 
-src/utflite.o: src/utflite.c $(HEADER)
-	$(CC) $(CFLAGS) -I src -c $< -o $@
+$(OBJ): $(SRC) $(HEADER) | $(BUILDDIR)
+	$(CC) $(CFLAGS) -I$(INCDIR) -c $< -o $@
 
 clean:
-	rm -f $(OBJ) $(LIB)
-	rm -f test/test_utflite test/test_single
+	rm -rf $(BUILDDIR)
+	rm -f $(TESTDIR)/test_utflite $(TESTDIR)/test_single
 
-install: $(LIB) $(HEADER)
-	install -d $(INCLUDEDIR)
+install: $(LIB) $(HEADER) $(SINGLE_HEADER)
+	install -d $(INCLUDEDIR)/utflite
 	install -d $(LIBDIR)
-	install -m 644 $(HEADER) $(INCLUDEDIR)/utflite.h
-	install -m 644 utflite.h $(INCLUDEDIR)/utflite_single.h
+	install -m 644 $(HEADER) $(INCLUDEDIR)/utflite/utflite.h
+	install -m 644 $(SINGLE_HEADER) $(INCLUDEDIR)/utflite_single.h
 	install -m 644 $(LIB) $(LIBDIR)/
 
 uninstall:
-	rm -f $(INCLUDEDIR)/utflite.h
+	rm -rf $(INCLUDEDIR)/utflite
 	rm -f $(INCLUDEDIR)/utflite_single.h
 	rm -f $(LIBDIR)/libutflite.a
 
 # Test using static library
-test: $(LIB) test/test_utflite.c
-	$(CC) $(CFLAGS_DEBUG) -I src test/test_utflite.c -L. -lutflite -o test/test_utflite
-	./test/test_utflite
+test: $(LIB) $(TESTDIR)/test_utflite.c
+	$(CC) $(CFLAGS_DEBUG) -I$(INCDIR) $(TESTDIR)/test_utflite.c -L$(BUILDDIR) -lutflite -o $(TESTDIR)/test_utflite
+	./$(TESTDIR)/test_utflite
 
 # Test using single-header version
-test-single: test/test_utflite.c utflite.h
-	$(CC) $(CFLAGS_DEBUG) -DUTFLITE_SINGLE_HEADER test/test_utflite.c -o test/test_single
-	./test/test_single
+test-single: $(TESTDIR)/test_utflite.c $(SINGLE_HEADER)
+	$(CC) $(CFLAGS_DEBUG) -DUTFLITE_SINGLE_HEADER -I$(SINGLE_HEADER_DIR) $(TESTDIR)/test_utflite.c -o $(TESTDIR)/test_single
+	./$(TESTDIR)/test_single
 
 # Debug build
 debug: CFLAGS = $(CFLAGS_DEBUG)

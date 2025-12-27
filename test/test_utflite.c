@@ -8,9 +8,9 @@
 
 #ifdef UTFLITE_SINGLE_HEADER
 #define UTFLITE_IMPLEMENTATION
-#include "../utflite.h"
-#else
 #include "utflite.h"
+#else
+#include <utflite/utflite.h>
 #endif
 
 static int tests_passed = 0;

@@ -4,7 +4,7 @@
  * Unicode 15.0 width tables included.
  */
 
-#include "utflite.h"
+#include <utflite/utflite.h>
 
 /* ============================================================================
  * Unicode Width Tables
@@ -185,6 +185,10 @@ static const utflite_unicode_range ZERO_WIDTH_RANGES[] = {
     {0x1CF8, 0x1CF9},   /* Vedic tones */
     {0x1DC0, 0x1DF9},   /* Combining Diacritical Marks Supplement */
     {0x1DFB, 0x1DFF},   /* Combining marks */
+    {0x200B, 0x200F},   /* Zero-width space, joiners, direction marks */
+    {0x202A, 0x202E},   /* Bidi formatting characters */
+    {0x2060, 0x2064},   /* Word joiner, invisible operators */
+    {0x2066, 0x206F},   /* Bidi isolates */
     {0x20D0, 0x20F0},   /* Combining Diacritical Marks for Symbols */
     {0x2CEF, 0x2CF1},   /* Coptic combining marks */
     {0x2D7F, 0x2D7F},   /* Tifinagh consonant joiner */
@@ -348,10 +352,6 @@ static const utflite_unicode_range ZERO_WIDTH_RANGES[] = {
     {0x1E8D0, 0x1E8D6}, /* Mende Kikakui combining marks */
     {0x1E944, 0x1E94A}, /* Adlam modifiers */
     {0xE0100, 0xE01EF}, /* Variation Selectors Supplement */
-    {0x200B, 0x200F},   /* Zero-width space, joiners, direction marks */
-    {0x202A, 0x202E},   /* Bidi formatting characters */
-    {0x2060, 0x2064},   /* Word joiner, invisible operators */
-    {0x2066, 0x206F},   /* Bidi isolates */
 };
 #define ZERO_WIDTH_COUNT (sizeof(ZERO_WIDTH_RANGES) / sizeof(ZERO_WIDTH_RANGES[0]))
 
@@ -690,9 +690,9 @@ int utflite_prev_char(const char *text, int offset) {
     if (offset <= 0) {
         return 0;
     }
-    /* Scan backwards to find a start byte (not a continuation byte) */
     int pos = offset - 1;
-    while (pos > 0 && ((unsigned char)text[pos] & 0xC0) == 0x80) {
+    int limit = (offset > 4) ? offset - 4 : 0;
+    while (pos > limit && ((unsigned char)text[pos] & 0xC0) == 0x80) {
         pos--;
     }
     return pos;
@@ -764,7 +764,7 @@ int utflite_string_width(const char *text, int length) {
     return width;
 }
 
-int utflite_is_combining(uint32_t codepoint) {
+int utflite_is_zero_width(uint32_t codepoint) {
     return unicode_range_contains(codepoint, ZERO_WIDTH_RANGES, ZERO_WIDTH_COUNT);
 }
 
