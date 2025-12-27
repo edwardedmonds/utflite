@@ -203,6 +203,58 @@ int main(void) {
 }
 ```
 
+### Grapheme Clusters (User-Perceived Characters)
+
+A "character" to users isn't always a single codepoint. Emoji sequences, combining marks, and flags are multiple codepoints that display as one unit. Use `utflite_next_grapheme()` to iterate by what users actually see:
+
+```c
+#include "utflite.h"
+#include <stdio.h>
+#include <string.h>
+
+int count_graphemes(const char *text, int len) {
+    int count = 0, offset = 0;
+    while (offset < len) {
+        offset = utflite_next_grapheme(text, len, offset);
+        count++;
+    }
+    return count;
+}
+
+int main(void) {
+    // Family emoji: 7 codepoints, but 1 grapheme
+    const char *family = "\xF0\x9F\x91\xA8\xE2\x80\x8D\xF0\x9F\x91\xA9\xE2\x80\x8D\xF0\x9F\x91\xA7";
+    int len = strlen(family);
+
+    printf("Family emoji:\n");
+    printf("  Bytes: %d\n", len);                              // 18
+    printf("  Codepoints: %d\n", utflite_codepoint_count(family, len));  // 7
+    printf("  Graphemes: %d\n", count_graphemes(family, len)); // 1
+
+    // e + combining acute accent = 1 grapheme
+    const char *accent = "e\xCC\x81";  // é as e + U+0301
+    len = strlen(accent);
+    printf("\ne + acute accent:\n");
+    printf("  Codepoints: %d\n", utflite_codepoint_count(accent, len));  // 2
+    printf("  Graphemes: %d\n", count_graphemes(accent, len)); // 1
+
+    // Flag: 2 regional indicators = 1 grapheme
+    const char *flag = "\xF0\x9F\x87\xA8\xF0\x9F\x87\xA6";  // 🇨🇦
+    len = strlen(flag);
+    printf("\nCanadian flag:\n");
+    printf("  Codepoints: %d\n", utflite_codepoint_count(flag, len));  // 2
+    printf("  Graphemes: %d\n", count_graphemes(flag, len)); // 1
+
+    return 0;
+}
+```
+
+This is essential for:
+- Cursor movement in text editors
+- Character counting for length limits
+- Proper text selection
+- Backspace/delete operations
+
 ### Character Display Width
 
 Terminals display characters with different widths. ASCII is 1 column, CJK and emoji are 2 columns, combining marks are 0 columns:
