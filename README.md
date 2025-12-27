@@ -11,6 +11,33 @@ A lightweight, zero-dependency UTF-8 library for C.
 - Single-header option for easy integration
 - C17 compliant, no external dependencies
 
+## Use Cases
+
+**Terminal/CLI applications**
+- Text editors that need cursor positioning over Unicode text
+- Progress bars and status lines with proper column alignment
+- Tree views and tables that must align with CJK/emoji content
+
+**Text processing tools**
+- Validating UTF-8 input from files or network
+- Counting characters (not bytes) for length limits
+- Truncating strings to fit display widths without breaking characters
+
+**Embedded systems**
+- Lightweight alternative to ICU or libunistring
+- Single-header makes it easy to integrate into firmware
+- No heap allocation, no dependencies
+
+**Game development**
+- Chat systems handling international text
+- UI text measurement for layout
+- Input validation for player names
+
+**When NOT to use utflite**
+- Full Unicode normalization (NFC/NFD) - use ICU
+- Complex text shaping (Arabic, Indic scripts) - use HarfBuzz
+- Locale-aware sorting/comparison - use ICU
+
 ## Project Structure
 
 ```
