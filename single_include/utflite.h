@@ -28,7 +28,6 @@
 #define UTFLITE_H
 
 #include <stdint.h>
-#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,9 +35,9 @@ extern "C" {
 
 /* Version information */
 #define UTFLITE_VERSION_MAJOR 1
-#define UTFLITE_VERSION_MINOR 0
+#define UTFLITE_VERSION_MINOR 1
 #define UTFLITE_VERSION_PATCH 0
-#define UTFLITE_VERSION_STRING "1.0.0"
+#define UTFLITE_VERSION_STRING "1.1.0"
 
 /* Unicode replacement character (returned on decode errors) */
 #define UTFLITE_REPLACEMENT_CHAR 0xFFFD
@@ -712,9 +711,9 @@ static const utflite__unicode_range UTFLITE__DOUBLE_WIDTH_RANGES[] = {
 };
 #define UTFLITE__DOUBLE_WIDTH_COUNT (sizeof(UTFLITE__DOUBLE_WIDTH_RANGES) / sizeof(UTFLITE__DOUBLE_WIDTH_RANGES[0]))
 
-static int utflite__unicode_range_contains(uint32_t codepoint,
-                                            const utflite__unicode_range *ranges,
-                                            int count) {
+static inline int utflite__unicode_range_contains(uint32_t codepoint,
+                                                   const utflite__unicode_range *ranges,
+                                                   int count) {
     int low = 0;
     int high = count - 1;
     while (low <= high) {
@@ -735,7 +734,7 @@ static int utflite__unicode_range_contains(uint32_t codepoint,
  * consume full sequence for semantic errors.
  */
 int utflite_decode(const char *bytes, int length, uint32_t *codepoint) {
-    if (length <= 0 || bytes == NULL) {
+    if (length <= 0 || !bytes) {
         *codepoint = UTFLITE_REPLACEMENT_CHAR;
         return 1;
     }

@@ -526,7 +526,7 @@ static int unicode_range_contains(uint32_t codepoint,
  * ============================================================================ */
 
 int utflite_decode(const char *bytes, int length, uint32_t *codepoint) {
-    if (length <= 0 || bytes == NULL) {
+    if (length <= 0 || !bytes) {
         *codepoint = UTFLITE_REPLACEMENT_CHAR;
         return 1;
     }

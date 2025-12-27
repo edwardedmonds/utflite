@@ -16,7 +16,6 @@
 #define UTFLITE_H
 
 #include <stdint.h>
-#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,9 +23,9 @@ extern "C" {
 
 /* Version information */
 #define UTFLITE_VERSION_MAJOR 1
-#define UTFLITE_VERSION_MINOR 0
+#define UTFLITE_VERSION_MINOR 1
 #define UTFLITE_VERSION_PATCH 0
-#define UTFLITE_VERSION_STRING "1.0.0"
+#define UTFLITE_VERSION_STRING "1.1.0"
 
 /* Unicode replacement character (returned on decode errors) */
 #define UTFLITE_REPLACEMENT_CHAR 0xFFFD
