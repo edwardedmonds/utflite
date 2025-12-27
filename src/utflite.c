@@ -595,6 +595,556 @@ static const utflite_unicode_range DOUBLE_WIDTH_RANGES[] = {
 #define DOUBLE_WIDTH_COUNT (sizeof(DOUBLE_WIDTH_RANGES) / sizeof(DOUBLE_WIDTH_RANGES[0]))
 
 /* ============================================================================
+ * Grapheme Cluster Break Properties (Unicode 17.0, UAX #29)
+ * ============================================================================ */
+
+typedef enum {
+    GCB_OTHER = 0,
+    GCB_CR,
+    GCB_LF,
+    GCB_CONTROL,
+    GCB_EXTEND,
+    GCB_ZWJ,
+    GCB_REGIONAL_INDICATOR,
+    GCB_PREPEND,
+    GCB_SPACING_MARK,
+    GCB_L,
+    GCB_V,
+    GCB_T,
+    GCB_LV,
+    GCB_LVT
+} gcb_property;
+
+typedef struct {
+    uint32_t start;
+    uint32_t end;
+    uint8_t property;
+} gcb_range;
+
+/* GCB property ranges (LV/LVT computed for Hangul U+AC00-U+D7A3) */
+static const gcb_range GCB_RANGES[] = {
+    {0x0000, 0x0009, GCB_CONTROL},
+    {0x000A, 0x000A, GCB_LF},
+    {0x000B, 0x000C, GCB_CONTROL},
+    {0x000D, 0x000D, GCB_CR},
+    {0x000E, 0x001F, GCB_CONTROL},
+    {0x007F, 0x009F, GCB_CONTROL},
+    {0x00AD, 0x00AD, GCB_CONTROL},
+    {0x0300, 0x036F, GCB_EXTEND},
+    {0x0483, 0x0489, GCB_EXTEND},
+    {0x0591, 0x05BD, GCB_EXTEND},
+    {0x05BF, 0x05BF, GCB_EXTEND},
+    {0x05C1, 0x05C2, GCB_EXTEND},
+    {0x05C4, 0x05C5, GCB_EXTEND},
+    {0x05C7, 0x05C7, GCB_EXTEND},
+    {0x0600, 0x0605, GCB_PREPEND},
+    {0x0610, 0x061A, GCB_EXTEND},
+    {0x061C, 0x061C, GCB_CONTROL},
+    {0x064B, 0x065F, GCB_EXTEND},
+    {0x0670, 0x0670, GCB_EXTEND},
+    {0x06D6, 0x06DC, GCB_EXTEND},
+    {0x06DD, 0x06DD, GCB_PREPEND},
+    {0x06DF, 0x06E4, GCB_EXTEND},
+    {0x06E7, 0x06E8, GCB_EXTEND},
+    {0x06EA, 0x06ED, GCB_EXTEND},
+    {0x070F, 0x070F, GCB_PREPEND},
+    {0x0711, 0x0711, GCB_EXTEND},
+    {0x0730, 0x074A, GCB_EXTEND},
+    {0x07A6, 0x07B0, GCB_EXTEND},
+    {0x07EB, 0x07F3, GCB_EXTEND},
+    {0x07FD, 0x07FD, GCB_EXTEND},
+    {0x0816, 0x0819, GCB_EXTEND},
+    {0x081B, 0x0823, GCB_EXTEND},
+    {0x0825, 0x0827, GCB_EXTEND},
+    {0x0829, 0x082D, GCB_EXTEND},
+    {0x0859, 0x085B, GCB_EXTEND},
+    {0x0890, 0x0891, GCB_PREPEND},
+    {0x0897, 0x089F, GCB_EXTEND},
+    {0x08CA, 0x08E1, GCB_EXTEND},
+    {0x08E2, 0x08E2, GCB_PREPEND},
+    {0x08E3, 0x0902, GCB_EXTEND},
+    {0x0903, 0x0903, GCB_SPACING_MARK},
+    {0x093A, 0x093A, GCB_EXTEND},
+    {0x093B, 0x093B, GCB_SPACING_MARK},
+    {0x093C, 0x093C, GCB_EXTEND},
+    {0x093E, 0x0940, GCB_SPACING_MARK},
+    {0x0941, 0x0948, GCB_EXTEND},
+    {0x0949, 0x094C, GCB_SPACING_MARK},
+    {0x094D, 0x094D, GCB_EXTEND},
+    {0x094E, 0x094F, GCB_SPACING_MARK},
+    {0x0951, 0x0957, GCB_EXTEND},
+    {0x0962, 0x0963, GCB_EXTEND},
+    {0x0981, 0x0981, GCB_EXTEND},
+    {0x0982, 0x0983, GCB_SPACING_MARK},
+    {0x09BC, 0x09BC, GCB_EXTEND},
+    {0x09BE, 0x09BE, GCB_EXTEND},
+    {0x09BF, 0x09C0, GCB_SPACING_MARK},
+    {0x09C1, 0x09C4, GCB_EXTEND},
+    {0x09C7, 0x09C8, GCB_SPACING_MARK},
+    {0x09CB, 0x09CC, GCB_SPACING_MARK},
+    {0x09CD, 0x09CD, GCB_EXTEND},
+    {0x09D7, 0x09D7, GCB_EXTEND},
+    {0x09E2, 0x09E3, GCB_EXTEND},
+    {0x09FE, 0x09FE, GCB_EXTEND},
+    {0x0A01, 0x0A02, GCB_EXTEND},
+    {0x0A03, 0x0A03, GCB_SPACING_MARK},
+    {0x0A3C, 0x0A3C, GCB_EXTEND},
+    {0x0A3E, 0x0A40, GCB_SPACING_MARK},
+    {0x0A41, 0x0A42, GCB_EXTEND},
+    {0x0A47, 0x0A48, GCB_EXTEND},
+    {0x0A4B, 0x0A4D, GCB_EXTEND},
+    {0x0A51, 0x0A51, GCB_EXTEND},
+    {0x0A70, 0x0A71, GCB_EXTEND},
+    {0x0A75, 0x0A75, GCB_EXTEND},
+    {0x0A81, 0x0A82, GCB_EXTEND},
+    {0x0A83, 0x0A83, GCB_SPACING_MARK},
+    {0x0ABC, 0x0ABC, GCB_EXTEND},
+    {0x0ABE, 0x0AC0, GCB_SPACING_MARK},
+    {0x0AC1, 0x0AC5, GCB_EXTEND},
+    {0x0AC7, 0x0AC8, GCB_EXTEND},
+    {0x0AC9, 0x0AC9, GCB_SPACING_MARK},
+    {0x0ACB, 0x0ACC, GCB_SPACING_MARK},
+    {0x0ACD, 0x0ACD, GCB_EXTEND},
+    {0x0AE2, 0x0AE3, GCB_EXTEND},
+    {0x0AFA, 0x0AFF, GCB_EXTEND},
+    {0x0B01, 0x0B01, GCB_EXTEND},
+    {0x0B02, 0x0B03, GCB_SPACING_MARK},
+    {0x0B3C, 0x0B3C, GCB_EXTEND},
+    {0x0B3E, 0x0B3F, GCB_EXTEND},
+    {0x0B40, 0x0B40, GCB_SPACING_MARK},
+    {0x0B41, 0x0B44, GCB_EXTEND},
+    {0x0B47, 0x0B48, GCB_SPACING_MARK},
+    {0x0B4B, 0x0B4C, GCB_SPACING_MARK},
+    {0x0B4D, 0x0B4D, GCB_EXTEND},
+    {0x0B55, 0x0B57, GCB_EXTEND},
+    {0x0B62, 0x0B63, GCB_EXTEND},
+    {0x0B82, 0x0B82, GCB_EXTEND},
+    {0x0BBE, 0x0BBE, GCB_EXTEND},
+    {0x0BBF, 0x0BBF, GCB_SPACING_MARK},
+    {0x0BC0, 0x0BC0, GCB_EXTEND},
+    {0x0BC1, 0x0BC2, GCB_SPACING_MARK},
+    {0x0BC6, 0x0BC8, GCB_SPACING_MARK},
+    {0x0BCA, 0x0BCC, GCB_SPACING_MARK},
+    {0x0BCD, 0x0BCD, GCB_EXTEND},
+    {0x0BD7, 0x0BD7, GCB_EXTEND},
+    {0x0C00, 0x0C00, GCB_EXTEND},
+    {0x0C01, 0x0C03, GCB_SPACING_MARK},
+    {0x0C04, 0x0C04, GCB_EXTEND},
+    {0x0C3C, 0x0C3C, GCB_EXTEND},
+    {0x0C3E, 0x0C40, GCB_EXTEND},
+    {0x0C41, 0x0C44, GCB_SPACING_MARK},
+    {0x0C46, 0x0C48, GCB_EXTEND},
+    {0x0C4A, 0x0C4D, GCB_EXTEND},
+    {0x0C55, 0x0C56, GCB_EXTEND},
+    {0x0C62, 0x0C63, GCB_EXTEND},
+    {0x0C81, 0x0C81, GCB_EXTEND},
+    {0x0C82, 0x0C83, GCB_SPACING_MARK},
+    {0x0CBC, 0x0CBC, GCB_EXTEND},
+    {0x0CBE, 0x0CBE, GCB_SPACING_MARK},
+    {0x0CBF, 0x0CC2, GCB_EXTEND},
+    {0x0CC3, 0x0CC4, GCB_SPACING_MARK},
+    {0x0CC6, 0x0CCB, GCB_EXTEND},
+    {0x0CCC, 0x0CCD, GCB_EXTEND},
+    {0x0CD5, 0x0CD6, GCB_EXTEND},
+    {0x0CE2, 0x0CE3, GCB_EXTEND},
+    {0x0CF3, 0x0CF3, GCB_SPACING_MARK},
+    {0x0D00, 0x0D01, GCB_EXTEND},
+    {0x0D02, 0x0D03, GCB_SPACING_MARK},
+    {0x0D3B, 0x0D3C, GCB_EXTEND},
+    {0x0D3E, 0x0D3E, GCB_EXTEND},
+    {0x0D3F, 0x0D40, GCB_SPACING_MARK},
+    {0x0D41, 0x0D44, GCB_EXTEND},
+    {0x0D46, 0x0D48, GCB_SPACING_MARK},
+    {0x0D4A, 0x0D4C, GCB_SPACING_MARK},
+    {0x0D4D, 0x0D4D, GCB_EXTEND},
+    {0x0D4E, 0x0D4E, GCB_PREPEND},
+    {0x0D57, 0x0D57, GCB_EXTEND},
+    {0x0D62, 0x0D63, GCB_EXTEND},
+    {0x0D81, 0x0D81, GCB_EXTEND},
+    {0x0D82, 0x0D83, GCB_SPACING_MARK},
+    {0x0DCA, 0x0DCA, GCB_EXTEND},
+    {0x0DCF, 0x0DCF, GCB_EXTEND},
+    {0x0DD0, 0x0DD1, GCB_SPACING_MARK},
+    {0x0DD2, 0x0DD6, GCB_EXTEND},
+    {0x0DD8, 0x0DDF, GCB_SPACING_MARK},
+    {0x0DF2, 0x0DF3, GCB_SPACING_MARK},
+    {0x0E31, 0x0E31, GCB_EXTEND},
+    {0x0E33, 0x0E33, GCB_SPACING_MARK},
+    {0x0E34, 0x0E3A, GCB_EXTEND},
+    {0x0E47, 0x0E4E, GCB_EXTEND},
+    {0x0EB1, 0x0EB1, GCB_EXTEND},
+    {0x0EB3, 0x0EB3, GCB_SPACING_MARK},
+    {0x0EB4, 0x0EBC, GCB_EXTEND},
+    {0x0EC8, 0x0ECE, GCB_EXTEND},
+    {0x0F18, 0x0F19, GCB_EXTEND},
+    {0x0F35, 0x0F35, GCB_EXTEND},
+    {0x0F37, 0x0F37, GCB_EXTEND},
+    {0x0F39, 0x0F39, GCB_EXTEND},
+    {0x0F3E, 0x0F3F, GCB_SPACING_MARK},
+    {0x0F71, 0x0F7E, GCB_EXTEND},
+    {0x0F7F, 0x0F7F, GCB_SPACING_MARK},
+    {0x0F80, 0x0F84, GCB_EXTEND},
+    {0x0F86, 0x0F87, GCB_EXTEND},
+    {0x0F8D, 0x0F97, GCB_EXTEND},
+    {0x0F99, 0x0FBC, GCB_EXTEND},
+    {0x0FC6, 0x0FC6, GCB_EXTEND},
+    {0x102D, 0x1030, GCB_EXTEND},
+    {0x1031, 0x1031, GCB_SPACING_MARK},
+    {0x1032, 0x1037, GCB_EXTEND},
+    {0x1039, 0x103A, GCB_EXTEND},
+    {0x103B, 0x103C, GCB_SPACING_MARK},
+    {0x103D, 0x103E, GCB_EXTEND},
+    {0x1056, 0x1057, GCB_SPACING_MARK},
+    {0x1058, 0x1059, GCB_EXTEND},
+    {0x105E, 0x1060, GCB_EXTEND},
+    {0x1071, 0x1074, GCB_EXTEND},
+    {0x1082, 0x1082, GCB_EXTEND},
+    {0x1084, 0x1084, GCB_SPACING_MARK},
+    {0x1085, 0x1086, GCB_EXTEND},
+    {0x108D, 0x108D, GCB_EXTEND},
+    {0x109D, 0x109D, GCB_EXTEND},
+    {0x1100, 0x115F, GCB_L},
+    {0x1160, 0x11A7, GCB_V},
+    {0x11A8, 0x11FF, GCB_T},
+    {0x135D, 0x135F, GCB_EXTEND},
+    {0x1712, 0x1715, GCB_EXTEND},
+    {0x1732, 0x1734, GCB_EXTEND},
+    {0x1752, 0x1753, GCB_EXTEND},
+    {0x1772, 0x1773, GCB_EXTEND},
+    {0x17B4, 0x17B5, GCB_EXTEND},
+    {0x17B6, 0x17B6, GCB_SPACING_MARK},
+    {0x17B7, 0x17BD, GCB_EXTEND},
+    {0x17BE, 0x17C5, GCB_SPACING_MARK},
+    {0x17C6, 0x17C6, GCB_EXTEND},
+    {0x17C7, 0x17C8, GCB_SPACING_MARK},
+    {0x17C9, 0x17D3, GCB_EXTEND},
+    {0x17DD, 0x17DD, GCB_EXTEND},
+    {0x180B, 0x180D, GCB_EXTEND},
+    {0x180E, 0x180E, GCB_CONTROL},
+    {0x180F, 0x180F, GCB_EXTEND},
+    {0x1885, 0x1886, GCB_EXTEND},
+    {0x18A9, 0x18A9, GCB_EXTEND},
+    {0x1920, 0x1922, GCB_EXTEND},
+    {0x1923, 0x1926, GCB_SPACING_MARK},
+    {0x1927, 0x1928, GCB_EXTEND},
+    {0x1929, 0x192B, GCB_SPACING_MARK},
+    {0x1930, 0x1931, GCB_SPACING_MARK},
+    {0x1932, 0x1932, GCB_EXTEND},
+    {0x1933, 0x1938, GCB_SPACING_MARK},
+    {0x1939, 0x193B, GCB_EXTEND},
+    {0x1A17, 0x1A18, GCB_EXTEND},
+    {0x1A19, 0x1A1A, GCB_SPACING_MARK},
+    {0x1A1B, 0x1A1B, GCB_EXTEND},
+    {0x1A55, 0x1A55, GCB_SPACING_MARK},
+    {0x1A56, 0x1A56, GCB_EXTEND},
+    {0x1A57, 0x1A57, GCB_SPACING_MARK},
+    {0x1A58, 0x1A60, GCB_EXTEND},
+    {0x1A62, 0x1A62, GCB_EXTEND},
+    {0x1A65, 0x1A6C, GCB_EXTEND},
+    {0x1A6D, 0x1A72, GCB_SPACING_MARK},
+    {0x1A73, 0x1A7F, GCB_EXTEND},
+    {0x1AB0, 0x1AEB, GCB_EXTEND},
+    {0x1B00, 0x1B03, GCB_EXTEND},
+    {0x1B04, 0x1B04, GCB_SPACING_MARK},
+    {0x1B34, 0x1B3C, GCB_EXTEND},
+    {0x1B3D, 0x1B41, GCB_SPACING_MARK},
+    {0x1B42, 0x1B44, GCB_EXTEND},
+    {0x1B6B, 0x1B73, GCB_EXTEND},
+    {0x1B80, 0x1B81, GCB_EXTEND},
+    {0x1B82, 0x1B82, GCB_SPACING_MARK},
+    {0x1BA1, 0x1BA1, GCB_SPACING_MARK},
+    {0x1BA2, 0x1BA5, GCB_EXTEND},
+    {0x1BA6, 0x1BA7, GCB_SPACING_MARK},
+    {0x1BA8, 0x1BAD, GCB_EXTEND},
+    {0x1BE6, 0x1BE6, GCB_EXTEND},
+    {0x1BE7, 0x1BE7, GCB_SPACING_MARK},
+    {0x1BE8, 0x1BE9, GCB_EXTEND},
+    {0x1BEA, 0x1BEC, GCB_SPACING_MARK},
+    {0x1BED, 0x1BED, GCB_EXTEND},
+    {0x1BEE, 0x1BEE, GCB_SPACING_MARK},
+    {0x1BEF, 0x1BF3, GCB_EXTEND},
+    {0x1C24, 0x1C2B, GCB_SPACING_MARK},
+    {0x1C2C, 0x1C33, GCB_EXTEND},
+    {0x1C34, 0x1C35, GCB_SPACING_MARK},
+    {0x1C36, 0x1C37, GCB_EXTEND},
+    {0x1CD0, 0x1CD2, GCB_EXTEND},
+    {0x1CD4, 0x1CE0, GCB_EXTEND},
+    {0x1CE1, 0x1CE1, GCB_SPACING_MARK},
+    {0x1CE2, 0x1CE8, GCB_EXTEND},
+    {0x1CED, 0x1CED, GCB_EXTEND},
+    {0x1CF4, 0x1CF4, GCB_EXTEND},
+    {0x1CF7, 0x1CF7, GCB_SPACING_MARK},
+    {0x1CF8, 0x1CF9, GCB_EXTEND},
+    {0x1DC0, 0x1DFF, GCB_EXTEND},
+    {0x200B, 0x200B, GCB_CONTROL},
+    {0x200C, 0x200C, GCB_EXTEND},
+    {0x200D, 0x200D, GCB_ZWJ},
+    {0x200E, 0x200F, GCB_CONTROL},
+    {0x2028, 0x202E, GCB_CONTROL},
+    {0x2060, 0x206F, GCB_CONTROL},
+    {0x20D0, 0x20F0, GCB_EXTEND},
+    {0x2CEF, 0x2CF1, GCB_EXTEND},
+    {0x2D7F, 0x2D7F, GCB_EXTEND},
+    {0x2DE0, 0x2DFF, GCB_EXTEND},
+    {0x302A, 0x302F, GCB_EXTEND},
+    {0x3099, 0x309A, GCB_EXTEND},
+    {0xA66F, 0xA672, GCB_EXTEND},
+    {0xA674, 0xA67D, GCB_EXTEND},
+    {0xA69E, 0xA69F, GCB_EXTEND},
+    {0xA6F0, 0xA6F1, GCB_EXTEND},
+    {0xA802, 0xA802, GCB_EXTEND},
+    {0xA806, 0xA806, GCB_EXTEND},
+    {0xA80B, 0xA80B, GCB_EXTEND},
+    {0xA823, 0xA824, GCB_SPACING_MARK},
+    {0xA825, 0xA826, GCB_EXTEND},
+    {0xA827, 0xA827, GCB_SPACING_MARK},
+    {0xA82C, 0xA82C, GCB_EXTEND},
+    {0xA880, 0xA881, GCB_SPACING_MARK},
+    {0xA8B4, 0xA8C3, GCB_SPACING_MARK},
+    {0xA8C4, 0xA8C5, GCB_EXTEND},
+    {0xA8E0, 0xA8F1, GCB_EXTEND},
+    {0xA8FF, 0xA8FF, GCB_EXTEND},
+    {0xA926, 0xA92D, GCB_EXTEND},
+    {0xA947, 0xA951, GCB_EXTEND},
+    {0xA952, 0xA952, GCB_SPACING_MARK},
+    {0xA953, 0xA953, GCB_EXTEND},
+    {0xA960, 0xA97C, GCB_L},
+    {0xA980, 0xA982, GCB_EXTEND},
+    {0xA983, 0xA983, GCB_SPACING_MARK},
+    {0xA9B3, 0xA9B3, GCB_EXTEND},
+    {0xA9B4, 0xA9B5, GCB_SPACING_MARK},
+    {0xA9B6, 0xA9B9, GCB_EXTEND},
+    {0xA9BA, 0xA9BB, GCB_SPACING_MARK},
+    {0xA9BC, 0xA9C0, GCB_EXTEND},
+    {0xA9E5, 0xA9E5, GCB_EXTEND},
+    {0xAA29, 0xAA2E, GCB_EXTEND},
+    {0xAA2F, 0xAA30, GCB_SPACING_MARK},
+    {0xAA31, 0xAA32, GCB_EXTEND},
+    {0xAA33, 0xAA34, GCB_SPACING_MARK},
+    {0xAA35, 0xAA36, GCB_EXTEND},
+    {0xAA43, 0xAA43, GCB_EXTEND},
+    {0xAA4C, 0xAA4C, GCB_EXTEND},
+    {0xAA4D, 0xAA4D, GCB_SPACING_MARK},
+    {0xAA7C, 0xAA7C, GCB_EXTEND},
+    {0xAAB0, 0xAAB0, GCB_EXTEND},
+    {0xAAB2, 0xAAB4, GCB_EXTEND},
+    {0xAAB7, 0xAAB8, GCB_EXTEND},
+    {0xAABE, 0xAAC1, GCB_EXTEND},
+    {0xAAEB, 0xAAEB, GCB_SPACING_MARK},
+    {0xAAEC, 0xAAED, GCB_EXTEND},
+    {0xAAEE, 0xAAEF, GCB_SPACING_MARK},
+    {0xAAF5, 0xAAF5, GCB_SPACING_MARK},
+    {0xAAF6, 0xAAF6, GCB_EXTEND},
+    {0xABE3, 0xABE4, GCB_SPACING_MARK},
+    {0xABE5, 0xABE5, GCB_EXTEND},
+    {0xABE6, 0xABE7, GCB_SPACING_MARK},
+    {0xABE8, 0xABE8, GCB_EXTEND},
+    {0xABE9, 0xABEA, GCB_SPACING_MARK},
+    {0xABEC, 0xABEC, GCB_SPACING_MARK},
+    {0xABED, 0xABED, GCB_EXTEND},
+    {0xD7B0, 0xD7C6, GCB_V},
+    {0xD7CB, 0xD7FB, GCB_T},
+    {0xFB1E, 0xFB1E, GCB_EXTEND},
+    {0xFE00, 0xFE0F, GCB_EXTEND},
+    {0xFE20, 0xFE2F, GCB_EXTEND},
+    {0xFEFF, 0xFEFF, GCB_CONTROL},
+    {0xFF9E, 0xFF9F, GCB_EXTEND},
+    {0xFFF0, 0xFFFB, GCB_CONTROL},
+    {0x101FD, 0x101FD, GCB_EXTEND},
+    {0x102E0, 0x102E0, GCB_EXTEND},
+    {0x10376, 0x1037A, GCB_EXTEND},
+    {0x10A01, 0x10A03, GCB_EXTEND},
+    {0x10A05, 0x10A06, GCB_EXTEND},
+    {0x10A0C, 0x10A0F, GCB_EXTEND},
+    {0x10A38, 0x10A3F, GCB_EXTEND},
+    {0x10AE5, 0x10AE6, GCB_EXTEND},
+    {0x10D24, 0x10D27, GCB_EXTEND},
+    {0x10D69, 0x10D6D, GCB_EXTEND},
+    {0x10EAB, 0x10EAC, GCB_EXTEND},
+    {0x10EFA, 0x10EFF, GCB_EXTEND},
+    {0x10F46, 0x10F50, GCB_EXTEND},
+    {0x10F82, 0x10F85, GCB_EXTEND},
+    {0x11000, 0x11000, GCB_SPACING_MARK},
+    {0x11001, 0x11001, GCB_EXTEND},
+    {0x11002, 0x11002, GCB_SPACING_MARK},
+    {0x11038, 0x11046, GCB_EXTEND},
+    {0x11070, 0x11070, GCB_EXTEND},
+    {0x11073, 0x11074, GCB_EXTEND},
+    {0x1107F, 0x11081, GCB_EXTEND},
+    {0x11082, 0x11082, GCB_SPACING_MARK},
+    {0x110B0, 0x110B2, GCB_SPACING_MARK},
+    {0x110B3, 0x110B6, GCB_EXTEND},
+    {0x110B7, 0x110B8, GCB_SPACING_MARK},
+    {0x110B9, 0x110BA, GCB_EXTEND},
+    {0x110BD, 0x110BD, GCB_PREPEND},
+    {0x110C2, 0x110C2, GCB_EXTEND},
+    {0x110CD, 0x110CD, GCB_PREPEND},
+    {0x11100, 0x11102, GCB_EXTEND},
+    {0x11127, 0x1112B, GCB_EXTEND},
+    {0x1112C, 0x1112C, GCB_SPACING_MARK},
+    {0x1112D, 0x11134, GCB_EXTEND},
+    {0x11145, 0x11146, GCB_SPACING_MARK},
+    {0x11173, 0x11173, GCB_EXTEND},
+    {0x11180, 0x11181, GCB_EXTEND},
+    {0x11182, 0x11182, GCB_SPACING_MARK},
+    {0x111B3, 0x111B5, GCB_SPACING_MARK},
+    {0x111B6, 0x111BF, GCB_EXTEND},
+    {0x111C0, 0x111C0, GCB_EXTEND},
+    {0x111C2, 0x111C3, GCB_PREPEND},
+    {0x111C9, 0x111CF, GCB_EXTEND},
+    {0x1122C, 0x1122E, GCB_SPACING_MARK},
+    {0x1122F, 0x11231, GCB_EXTEND},
+    {0x11232, 0x11233, GCB_SPACING_MARK},
+    {0x11234, 0x11237, GCB_EXTEND},
+    {0x1123E, 0x1123E, GCB_EXTEND},
+    {0x11241, 0x11241, GCB_EXTEND},
+    {0x112DF, 0x112DF, GCB_EXTEND},
+    {0x112E0, 0x112E2, GCB_SPACING_MARK},
+    {0x112E3, 0x112EA, GCB_EXTEND},
+    {0x11300, 0x11301, GCB_EXTEND},
+    {0x11302, 0x11303, GCB_SPACING_MARK},
+    {0x1133B, 0x1133C, GCB_EXTEND},
+    {0x1133E, 0x1133E, GCB_EXTEND},
+    {0x1133F, 0x1133F, GCB_SPACING_MARK},
+    {0x11340, 0x11340, GCB_EXTEND},
+    {0x11341, 0x11344, GCB_SPACING_MARK},
+    {0x11347, 0x11348, GCB_SPACING_MARK},
+    {0x1134B, 0x1134D, GCB_EXTEND},
+    {0x11357, 0x11357, GCB_EXTEND},
+    {0x11362, 0x11363, GCB_SPACING_MARK},
+    {0x11366, 0x11374, GCB_EXTEND},
+    {0x113B8, 0x113C0, GCB_EXTEND},
+    {0x113B9, 0x113BA, GCB_SPACING_MARK},
+    {0x113C2, 0x113D2, GCB_EXTEND},
+    {0x113CA, 0x113CD, GCB_SPACING_MARK},
+    {0x113D1, 0x113D1, GCB_PREPEND},
+    {0x113E1, 0x113E2, GCB_EXTEND},
+    {0x11435, 0x11437, GCB_SPACING_MARK},
+    {0x11438, 0x1143F, GCB_EXTEND},
+    {0x11440, 0x11441, GCB_SPACING_MARK},
+    {0x11442, 0x11446, GCB_EXTEND},
+    {0x11445, 0x11445, GCB_SPACING_MARK},
+    {0x1145E, 0x1145E, GCB_EXTEND},
+    {0x114B0, 0x114B2, GCB_SPACING_MARK},
+    {0x114B3, 0x114B8, GCB_EXTEND},
+    {0x114B9, 0x114B9, GCB_SPACING_MARK},
+    {0x114BA, 0x114BA, GCB_EXTEND},
+    {0x114BB, 0x114BE, GCB_SPACING_MARK},
+    {0x114BF, 0x114C3, GCB_EXTEND},
+    {0x114C1, 0x114C1, GCB_SPACING_MARK},
+    {0x115AF, 0x115B1, GCB_SPACING_MARK},
+    {0x115B2, 0x115B5, GCB_EXTEND},
+    {0x115B8, 0x115BB, GCB_SPACING_MARK},
+    {0x115BC, 0x115C0, GCB_EXTEND},
+    {0x115BE, 0x115BE, GCB_SPACING_MARK},
+    {0x115DC, 0x115DD, GCB_EXTEND},
+    {0x11630, 0x11632, GCB_SPACING_MARK},
+    {0x11633, 0x1163A, GCB_EXTEND},
+    {0x1163B, 0x1163C, GCB_SPACING_MARK},
+    {0x1163D, 0x11640, GCB_EXTEND},
+    {0x1163E, 0x1163E, GCB_SPACING_MARK},
+    {0x116AB, 0x116AB, GCB_EXTEND},
+    {0x116AC, 0x116AC, GCB_SPACING_MARK},
+    {0x116AD, 0x116B7, GCB_EXTEND},
+    {0x116AE, 0x116AF, GCB_SPACING_MARK},
+    {0x1171D, 0x1171F, GCB_EXTEND},
+    {0x1171E, 0x1171E, GCB_SPACING_MARK},
+    {0x11722, 0x11725, GCB_EXTEND},
+    {0x11726, 0x11726, GCB_SPACING_MARK},
+    {0x11727, 0x1172B, GCB_EXTEND},
+    {0x1182C, 0x1182E, GCB_SPACING_MARK},
+    {0x1182F, 0x11837, GCB_EXTEND},
+    {0x11838, 0x11838, GCB_SPACING_MARK},
+    {0x11839, 0x1183A, GCB_EXTEND},
+    {0x11930, 0x11935, GCB_SPACING_MARK},
+    {0x11937, 0x11938, GCB_SPACING_MARK},
+    {0x1193B, 0x1193E, GCB_EXTEND},
+    {0x1193F, 0x1193F, GCB_PREPEND},
+    {0x11940, 0x11940, GCB_SPACING_MARK},
+    {0x11941, 0x11941, GCB_PREPEND},
+    {0x11942, 0x11943, GCB_EXTEND},
+    {0x119D1, 0x119D3, GCB_SPACING_MARK},
+    {0x119D4, 0x119DB, GCB_EXTEND},
+    {0x119DC, 0x119DF, GCB_SPACING_MARK},
+    {0x119E0, 0x119E0, GCB_EXTEND},
+    {0x119E4, 0x119E4, GCB_SPACING_MARK},
+    {0x11A01, 0x11A0A, GCB_EXTEND},
+    {0x11A33, 0x11A38, GCB_EXTEND},
+    {0x11A39, 0x11A39, GCB_SPACING_MARK},
+    {0x11A3B, 0x11A47, GCB_EXTEND},
+    {0x11A51, 0x11A56, GCB_EXTEND},
+    {0x11A57, 0x11A58, GCB_SPACING_MARK},
+    {0x11A59, 0x11A5B, GCB_EXTEND},
+    {0x11A84, 0x11A89, GCB_PREPEND},
+    {0x11A8A, 0x11A99, GCB_EXTEND},
+    {0x11A97, 0x11A97, GCB_SPACING_MARK},
+    {0x11B60, 0x11B67, GCB_EXTEND},
+    {0x11C2F, 0x11C2F, GCB_SPACING_MARK},
+    {0x11C30, 0x11C3F, GCB_EXTEND},
+    {0x11C3E, 0x11C3E, GCB_SPACING_MARK},
+    {0x11C92, 0x11CB6, GCB_EXTEND},
+    {0x11CA9, 0x11CA9, GCB_SPACING_MARK},
+    {0x11CB1, 0x11CB1, GCB_SPACING_MARK},
+    {0x11CB4, 0x11CB4, GCB_SPACING_MARK},
+    {0x11D31, 0x11D47, GCB_EXTEND},
+    {0x11D46, 0x11D46, GCB_PREPEND},
+    {0x11D8A, 0x11D8E, GCB_SPACING_MARK},
+    {0x11D90, 0x11D97, GCB_EXTEND},
+    {0x11D93, 0x11D94, GCB_SPACING_MARK},
+    {0x11D96, 0x11D96, GCB_SPACING_MARK},
+    {0x11EF3, 0x11EF6, GCB_EXTEND},
+    {0x11EF5, 0x11EF6, GCB_SPACING_MARK},
+    {0x11F00, 0x11F01, GCB_EXTEND},
+    {0x11F02, 0x11F02, GCB_PREPEND},
+    {0x11F03, 0x11F03, GCB_SPACING_MARK},
+    {0x11F34, 0x11F35, GCB_SPACING_MARK},
+    {0x11F36, 0x11F42, GCB_EXTEND},
+    {0x11F3E, 0x11F3F, GCB_SPACING_MARK},
+    {0x11F5A, 0x11F5A, GCB_EXTEND},
+    {0x13430, 0x1343F, GCB_CONTROL},
+    {0x13440, 0x13455, GCB_EXTEND},
+    {0x1611E, 0x1612F, GCB_EXTEND},
+    {0x1612A, 0x1612C, GCB_SPACING_MARK},
+    {0x16AF0, 0x16AF4, GCB_EXTEND},
+    {0x16B30, 0x16B36, GCB_EXTEND},
+    {0x16D63, 0x16D63, GCB_V},
+    {0x16D67, 0x16D6A, GCB_V},
+    {0x16F4F, 0x16F4F, GCB_EXTEND},
+    {0x16F51, 0x16F87, GCB_SPACING_MARK},
+    {0x16F8F, 0x16F92, GCB_EXTEND},
+    {0x16FE4, 0x16FE4, GCB_EXTEND},
+    {0x16FF0, 0x16FF1, GCB_EXTEND},
+    {0x1BC9D, 0x1BC9E, GCB_EXTEND},
+    {0x1BCA0, 0x1BCA3, GCB_CONTROL},
+    {0x1CF00, 0x1CF46, GCB_EXTEND},
+    {0x1D165, 0x1D172, GCB_EXTEND},
+    {0x1D173, 0x1D17A, GCB_CONTROL},
+    {0x1D17B, 0x1D1AD, GCB_EXTEND},
+    {0x1D242, 0x1D244, GCB_EXTEND},
+    {0x1DA00, 0x1DA36, GCB_EXTEND},
+    {0x1DA3B, 0x1DA6C, GCB_EXTEND},
+    {0x1DA75, 0x1DA75, GCB_EXTEND},
+    {0x1DA84, 0x1DA84, GCB_EXTEND},
+    {0x1DA9B, 0x1DAAF, GCB_EXTEND},
+    {0x1E000, 0x1E02A, GCB_EXTEND},
+    {0x1E08F, 0x1E08F, GCB_EXTEND},
+    {0x1E130, 0x1E136, GCB_EXTEND},
+    {0x1E2AE, 0x1E2AE, GCB_EXTEND},
+    {0x1E2EC, 0x1E2EF, GCB_EXTEND},
+    {0x1E4EC, 0x1E4EF, GCB_EXTEND},
+    {0x1E5EE, 0x1E5EF, GCB_EXTEND},
+    {0x1E6E3, 0x1E6F5, GCB_EXTEND},
+    {0x1E8D0, 0x1E8D6, GCB_EXTEND},
+    {0x1E944, 0x1E94A, GCB_EXTEND},
+    {0x1F1E6, 0x1F1FF, GCB_REGIONAL_INDICATOR},
+    {0x1F3FB, 0x1F3FF, GCB_EXTEND},
+    {0xE0000, 0xE0FFF, GCB_CONTROL},
+    {0xE0020, 0xE007F, GCB_EXTEND},
+    {0xE0100, 0xE01EF, GCB_EXTEND},
+};
+#define GCB_RANGE_COUNT (sizeof(GCB_RANGES) / sizeof(GCB_RANGES[0]))
+
+/* ============================================================================
  * Internal Helpers
  * ============================================================================ */
 
@@ -617,6 +1167,109 @@ static int unicode_range_contains(uint32_t codepoint,
         }
     }
     return 0;
+}
+
+/* Get grapheme cluster break property for a codepoint */
+static gcb_property get_gcb(uint32_t cp) {
+    /* Hangul syllables: LV and LVT are computed algorithmically */
+    if (cp >= 0xAC00 && cp <= 0xD7A3) {
+        return ((cp - 0xAC00) % 28 == 0) ? GCB_LV : GCB_LVT;
+    }
+
+    /* Binary search in property table */
+    int low = 0;
+    int high = GCB_RANGE_COUNT - 1;
+    while (low <= high) {
+        int mid = (low + high) / 2;
+        if (cp < GCB_RANGES[mid].start) {
+            high = mid - 1;
+        } else if (cp > GCB_RANGES[mid].end) {
+            low = mid + 1;
+        } else {
+            return (gcb_property)GCB_RANGES[mid].property;
+        }
+    }
+    return GCB_OTHER;
+}
+
+/* Extended_Pictographic check for GB11 (emoji ZWJ sequences) */
+static int is_extended_pictographic(uint32_t cp) {
+    /* Reuse the double-width table which includes Extended_Pictographic */
+    return unicode_range_contains(cp, DOUBLE_WIDTH_RANGES, DOUBLE_WIDTH_COUNT);
+}
+
+/*
+ * Determine if there's a grapheme cluster break between two codepoints.
+ * Implements UAX #29 extended grapheme cluster rules (GB3-GB13, GB999).
+ */
+static int is_grapheme_break(
+    gcb_property prev_prop,
+    gcb_property curr_prop,
+    int ri_count,
+    int in_ext_pict,
+    uint32_t curr_cp
+) {
+    /* GB3: CR × LF */
+    if (prev_prop == GCB_CR && curr_prop == GCB_LF) {
+        return 0;
+    }
+
+    /* GB4: (Control | CR | LF) ÷ */
+    if (prev_prop == GCB_CONTROL || prev_prop == GCB_CR || prev_prop == GCB_LF) {
+        return 1;
+    }
+
+    /* GB5: ÷ (Control | CR | LF) */
+    if (curr_prop == GCB_CONTROL || curr_prop == GCB_CR || curr_prop == GCB_LF) {
+        return 1;
+    }
+
+    /* GB6: L × (L | V | LV | LVT) */
+    if (prev_prop == GCB_L &&
+        (curr_prop == GCB_L || curr_prop == GCB_V ||
+         curr_prop == GCB_LV || curr_prop == GCB_LVT)) {
+        return 0;
+    }
+
+    /* GB7: (LV | V) × (V | T) */
+    if ((prev_prop == GCB_LV || prev_prop == GCB_V) &&
+        (curr_prop == GCB_V || curr_prop == GCB_T)) {
+        return 0;
+    }
+
+    /* GB8: (LVT | T) × T */
+    if ((prev_prop == GCB_LVT || prev_prop == GCB_T) && curr_prop == GCB_T) {
+        return 0;
+    }
+
+    /* GB9: × (Extend | ZWJ) */
+    if (curr_prop == GCB_EXTEND || curr_prop == GCB_ZWJ) {
+        return 0;
+    }
+
+    /* GB9a: × SpacingMark */
+    if (curr_prop == GCB_SPACING_MARK) {
+        return 0;
+    }
+
+    /* GB9b: Prepend × */
+    if (prev_prop == GCB_PREPEND) {
+        return 0;
+    }
+
+    /* GB11: ExtPict Extend* ZWJ × ExtPict */
+    if (in_ext_pict && prev_prop == GCB_ZWJ && is_extended_pictographic(curr_cp)) {
+        return 0;
+    }
+
+    /* GB12/GB13: RI × RI (only for pairs) */
+    if (prev_prop == GCB_REGIONAL_INDICATOR && curr_prop == GCB_REGIONAL_INDICATOR) {
+        /* Break if we've already seen an even number of RIs */
+        return (ri_count % 2) == 0;
+    }
+
+    /* GB999: Any ÷ Any */
+    return 1;
 }
 
 /* ============================================================================
@@ -797,19 +1450,100 @@ int utflite_prev_char(const char *text, int offset) {
 }
 
 /* ============================================================================
- * Grapheme Cluster Support (Stubs)
+ * Grapheme Cluster Navigation (UAX #29)
  * ============================================================================ */
 
 int utflite_next_grapheme(const char *text, int length, int offset) {
-    /* For now, just advance by one codepoint */
-    /* TODO: Implement proper grapheme cluster boundaries (UAX #29) */
-    return utflite_next_char(text, length, offset);
+    if (!text || offset >= length || offset < 0) {
+        return length;
+    }
+
+    /* Decode first codepoint */
+    uint32_t prev_cp;
+    int bytes = utflite_decode(text + offset, length - offset, &prev_cp);
+    int next_offset = offset + bytes;
+
+    if (next_offset >= length) {
+        return length;
+    }
+
+    gcb_property prev_prop = get_gcb(prev_cp);
+    int ri_count = (prev_prop == GCB_REGIONAL_INDICATOR) ? 1 : 0;
+    int in_ext_pict = is_extended_pictographic(prev_cp);
+
+    /* Loop through following characters */
+    while (next_offset < length) {
+        uint32_t curr_cp;
+        bytes = utflite_decode(text + next_offset, length - next_offset, &curr_cp);
+        gcb_property curr_prop = get_gcb(curr_cp);
+
+        /* Check for break */
+        if (is_grapheme_break(prev_prop, curr_prop, ri_count, in_ext_pict, curr_cp)) {
+            return next_offset;
+        }
+
+        /* Update state for next iteration */
+        if (curr_prop == GCB_REGIONAL_INDICATOR) {
+            ri_count++;
+        } else if (curr_prop != GCB_EXTEND && curr_prop != GCB_ZWJ) {
+            ri_count = 0;
+        }
+
+        /* Track ExtPict sequence for GB11 */
+        if (is_extended_pictographic(curr_cp)) {
+            in_ext_pict = 1;
+        } else if (curr_prop != GCB_EXTEND && curr_prop != GCB_ZWJ) {
+            in_ext_pict = 0;
+        }
+
+        prev_cp = curr_cp;
+        prev_prop = curr_prop;
+        next_offset += bytes;
+    }
+
+    return length;
 }
 
 int utflite_prev_grapheme(const char *text, int offset) {
-    /* For now, just go back by one codepoint */
-    /* TODO: Implement proper grapheme cluster boundaries (UAX #29) */
-    return utflite_prev_char(text, offset);
+    if (!text || offset <= 0) {
+        return 0;
+    }
+
+    /* Find the start of the previous codepoint */
+    int prev_start = utflite_prev_char(text, offset);
+    if (prev_start == 0 && offset > 0) {
+        /* We're at the start after moving back one char */
+        return 0;
+    }
+
+    /*
+     * Strategy: scan forward from a safe point to find grapheme boundaries,
+     * then return the last one before 'offset'.
+     * Limit backward scan to ~64 codepoints (covers any reasonable grapheme).
+     */
+    int scan_start = prev_start;
+    int max_backtrack = 64;
+    while (max_backtrack > 0 && scan_start > 0) {
+        int prev = utflite_prev_char(text, scan_start);
+        if (prev == scan_start) break;
+        scan_start = prev;
+        max_backtrack--;
+    }
+
+    /* Scan forward from scan_start, tracking grapheme boundaries */
+    int curr = scan_start;
+    int grapheme_start = scan_start;
+
+    while (curr < offset) {
+        int next = utflite_next_grapheme(text, offset, curr);
+        if (next >= offset) {
+            break;
+        }
+        grapheme_start = next;
+        curr = next;
+    }
+
+    return grapheme_start;
 }
 
 /* ============================================================================

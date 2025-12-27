@@ -23,9 +23,9 @@ extern "C" {
 
 /* Version information */
 #define UTFLITE_VERSION_MAJOR 1
-#define UTFLITE_VERSION_MINOR 2
+#define UTFLITE_VERSION_MINOR 3
 #define UTFLITE_VERSION_PATCH 0
-#define UTFLITE_VERSION_STRING "1.2.0"
+#define UTFLITE_VERSION_STRING "1.3.0"
 
 /* Unicode replacement character (returned on decode errors) */
 #define UTFLITE_REPLACEMENT_CHAR 0xFFFD
@@ -121,20 +121,19 @@ int utflite_next_char(const char *text, int length, int offset);
 int utflite_prev_char(const char *text, int offset);
 
 /* ============================================================================
- * Grapheme Cluster Support (Future/Stub)
+ * Grapheme Cluster Navigation (UAX #29)
  * ============================================================================ */
 
 /*
  * Returns byte offset of next grapheme cluster boundary.
- * Currently equivalent to utflite_next_char().
- * Future: UAX #29 compliant grapheme segmentation.
+ * Implements UAX #29 extended grapheme cluster segmentation.
+ * Handles emoji sequences, combining marks, flags, and Hangul.
  */
 int utflite_next_grapheme(const char *text, int length, int offset);
 
 /*
  * Returns byte offset of previous grapheme cluster boundary.
- * Currently equivalent to utflite_prev_char().
- * Future: UAX #29 compliant grapheme segmentation.
+ * Implements UAX #29 extended grapheme cluster segmentation.
  */
 int utflite_prev_grapheme(const char *text, int offset);
 
