@@ -11,11 +11,26 @@ A lightweight, zero-dependency UTF-8 library for C.
 - Single-header option for easy integration
 - C17 compliant, no external dependencies
 
+## Project Structure
+
+```
+utflite/
+├── include/utflite/      # Public headers
+│   └── utflite.h
+├── single_include/       # Single-header distribution
+│   └── utflite.h
+├── src/                  # Implementation
+│   └── utflite.c
+├── test/
+│   └── test_utflite.c
+└── build/                # Build artifacts (gitignored)
+```
+
 ## Installation
 
-### Single Header (Recommended)
+### Single Header (Easiest)
 
-Copy `utflite.h` to your project. In **one** .c file:
+Copy `single_include/utflite.h` to your project. In **one** .c file:
 
 ```c
 #define UTFLITE_IMPLEMENTATION
@@ -35,7 +50,13 @@ make
 make install  # installs to /usr/local
 ```
 
-Then compile with `-lutflite`.
+Then in your code:
+
+```c
+#include <utflite/utflite.h>
+```
+
+And compile with `-lutflite`.
 
 ## Tutorial
 
@@ -329,8 +350,8 @@ int utflite_codepoint_count(const char *text, int length);
 int utflite_string_width(const char *text, int length);
 
 // Check character properties
-int utflite_is_combining(uint32_t codepoint);  // Zero-width?
-int utflite_is_wide(uint32_t codepoint);       // Double-width?
+int utflite_is_zero_width(uint32_t codepoint);  // Zero-width (combining, ZWJ, etc)?
+int utflite_is_wide(uint32_t codepoint);        // Double-width (CJK, emoji)?
 
 // Find truncation point for max display columns
 int utflite_truncate(const char *text, int length, int max_cols);
@@ -339,7 +360,7 @@ int utflite_truncate(const char *text, int length, int max_cols);
 ## Building
 
 ```bash
-make              # Build static library
+make              # Build static library (output in build/)
 make test         # Run tests with static library
 make test-single  # Run tests with single-header version
 make install      # Install to /usr/local
