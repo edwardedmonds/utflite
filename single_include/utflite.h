@@ -22,6 +22,14 @@
  *         int width = utflite_codepoint_width(cp); // Returns 2 (double-width)
  *         return 0;
  *     }
+ *
+ * NOTES:
+ *   - © (U+00A9) and ® (U+00AE) are treated as double-width to match
+ *     modern terminal emoji rendering behavior.
+ *   - Grapheme cluster functions are stubs; they operate on codepoints,
+ *     not user-perceived characters. Emoji sequences like 👨‍👩‍👧 will
+ *     not be handled as single units.
+ *   - East Asian Ambiguous characters default to width 1.
  */
 
 #ifndef UTFLITE_H
@@ -93,7 +101,9 @@ int utflite_encode(uint32_t codepoint, char *buffer);
  *   -1  Non-printable control character (C0/C1 except NUL)
  *    0  Zero-width (combining marks, format chars, ZWJ, etc.)
  *    1  Normal width (ASCII, Latin, most scripts)
- *    2  Double-width (CJK ideographs, fullwidth forms, emoji)
+ *    2  Double-width (CJK, fullwidth, emoji including © and ®)
+ *
+ * Note: East Asian Ambiguous characters return 1 (narrow context assumed).
  */
 int utflite_codepoint_width(uint32_t codepoint);
 
@@ -709,7 +719,7 @@ static const utflite__unicode_range UTFLITE__DOUBLE_WIDTH_RANGES[] = {
     {0x2F00, 0x2FD5},
     {0x2FF0, 0x303E},
     {0x3041, 0x3096},
-    {0x3099, 0x30FF},
+    {0x309B, 0x30FF},
     {0x3105, 0x312F},
     {0x3131, 0x318E},
     {0x3190, 0x31E5},
