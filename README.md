@@ -4,6 +4,11 @@ A lightweight, zero-dependency UTF-8 library for C.
 
 ## News
 
+### v1.4.0 (December 2025)
+- Code compliance with CODING_STANDARDS.md (removed typedefs, added named constants)
+- Increased grapheme backtrack limit to 128 codepoints (handles longest emoji sequences)
+- Internal improvements (no API changes)
+
 ### v1.3.0 (December 2025)
 - **UAX #29 grapheme cluster segmentation** - proper cursor movement over emoji sequences, combining marks, Hangul, and Indic scripts
 - 100% pass rate on official Unicode GraphemeBreakTest.txt (766 tests)

@@ -21,11 +21,11 @@
 extern "C" {
 #endif
 
-/* Version information */
+/* Library version: major.minor.patch */
 #define UTFLITE_VERSION_MAJOR 1
-#define UTFLITE_VERSION_MINOR 3
+#define UTFLITE_VERSION_MINOR 4
 #define UTFLITE_VERSION_PATCH 0
-#define UTFLITE_VERSION_STRING "1.3.0"
+#define UTFLITE_VERSION_STRING "1.4.0"
 
 /* Unicode replacement character (returned on decode errors) */
 #define UTFLITE_REPLACEMENT_CHAR 0xFFFD

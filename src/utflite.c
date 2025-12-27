@@ -10,17 +10,18 @@
  * Unicode Width Tables
  * ============================================================================ */
 
-typedef struct {
+/* Range of Unicode codepoints, used for binary search in property tables. */
+struct utflite_unicode_range {
     uint32_t start;
     uint32_t end;
-} utflite_unicode_range;
+};
 
 /*
  * Zero-width character ranges (Unicode 17.0).
  * Mn (Nonspacing Mark), Me (Enclosing Mark), Cf (Format).
  * Sorted by start codepoint for binary search.
  */
-static const utflite_unicode_range ZERO_WIDTH_RANGES[] = {
+static const struct utflite_unicode_range ZERO_WIDTH_RANGES[] = {
     {0x0300, 0x036F},
     {0x0483, 0x0489},
     {0x0591, 0x05BD},
@@ -404,7 +405,7 @@ static const utflite_unicode_range ZERO_WIDTH_RANGES[] = {
  * W/F from EastAsianWidth + Extended_Pictographic emoji.
  * Sorted by start codepoint for binary search.
  */
-static const utflite_unicode_range DOUBLE_WIDTH_RANGES[] = {
+static const struct utflite_unicode_range DOUBLE_WIDTH_RANGES[] = {
     {0x00A9, 0x00A9},
     {0x00AE, 0x00AE},
     {0x1100, 0x115F},
@@ -594,35 +595,46 @@ static const utflite_unicode_range DOUBLE_WIDTH_RANGES[] = {
 };
 #define DOUBLE_WIDTH_COUNT (sizeof(DOUBLE_WIDTH_RANGES) / sizeof(DOUBLE_WIDTH_RANGES[0]))
 
+
 /* ============================================================================
  * Grapheme Cluster Break Properties (Unicode 17.0, UAX #29)
  * ============================================================================ */
 
-typedef enum {
-    GCB_OTHER = 0,
-    GCB_CR,
-    GCB_LF,
-    GCB_CONTROL,
-    GCB_EXTEND,
-    GCB_ZWJ,
-    GCB_REGIONAL_INDICATOR,
-    GCB_PREPEND,
-    GCB_SPACING_MARK,
-    GCB_L,
-    GCB_V,
-    GCB_T,
-    GCB_LV,
-    GCB_LVT
-} gcb_property;
+/* Grapheme Cluster Break property values from UAX #29. */
+enum gcb_property {
+	GCB_OTHER = 0,
+	GCB_CR,
+	GCB_LF,
+	GCB_CONTROL,
+	GCB_EXTEND,
+	GCB_ZWJ,
+	GCB_REGIONAL_INDICATOR,
+	GCB_PREPEND,
+	GCB_SPACING_MARK,
+	GCB_L,
+	GCB_V,
+	GCB_T,
+	GCB_LV,
+	GCB_LVT
+};
 
-typedef struct {
+/* Hangul syllable constants for LV/LVT computation (Unicode 3.0) */
+#define HANGUL_SBASE  0xAC00  /* First Hangul syllable */
+#define HANGUL_SEND   0xD7A3  /* Last Hangul syllable */
+#define HANGUL_TCOUNT 28      /* Number of trailing jamo per syllable */
+
+/* Maximum codepoints to scan backward for grapheme boundary */
+#define GRAPHEME_MAX_BACKTRACK 128
+
+/* A range of codepoints with an associated GCB property. */
+struct gcb_range {
     uint32_t start;
     uint32_t end;
     uint8_t property;
-} gcb_range;
+};
 
 /* GCB property ranges (LV/LVT computed for Hangul U+AC00-U+D7A3) */
-static const gcb_range GCB_RANGES[] = {
+static const struct gcb_range GCB_RANGES[] = {
     {0x0000, 0x0009, GCB_CONTROL},
     {0x000A, 0x000A, GCB_LF},
     {0x000B, 0x000C, GCB_CONTROL},
@@ -1159,7 +1171,7 @@ static const uint32_t INCB_LINKERS[] = {
 #define INCB_LINKER_COUNT (sizeof(INCB_LINKERS) / sizeof(INCB_LINKERS[0]))
 
 /* InCB Consonant ranges */
-static const utflite_unicode_range INCB_CONSONANTS[] = {
+static const struct utflite_unicode_range INCB_CONSONANTS[] = {
     {0x0915, 0x0939}, {0x0958, 0x095F}, {0x0978, 0x097F}, {0x0995, 0x09A8},
     {0x09AA, 0x09B0}, {0x09B2, 0x09B2}, {0x09B6, 0x09B9}, {0x09DC, 0x09DD},
     {0x09DF, 0x09E1}, {0x09F0, 0x09F1}, {0x0A15, 0x0A28}, {0x0A2A, 0x0A30},
@@ -1208,7 +1220,7 @@ static const utflite_unicode_range INCB_CONSONANTS[] = {
  * Binary search helper to check if a codepoint falls within any range.
  */
 static int unicode_range_contains(uint32_t codepoint,
-                                   const utflite_unicode_range *ranges,
+                                   const struct utflite_unicode_range *ranges,
                                    int count) {
     int low = 0;
     int high = count - 1;
@@ -1226,11 +1238,11 @@ static int unicode_range_contains(uint32_t codepoint,
 }
 
 /* Get grapheme cluster break property for a codepoint */
-static gcb_property get_gcb(uint32_t cp) {
-    /* Hangul syllables: LV and LVT are computed algorithmically */
-    if (cp >= 0xAC00 && cp <= 0xD7A3) {
-        return ((cp - 0xAC00) % 28 == 0) ? GCB_LV : GCB_LVT;
-    }
+static enum gcb_property get_gcb(uint32_t cp) {
+	/* Hangul syllables: LV and LVT are computed algorithmically */
+	if (cp >= HANGUL_SBASE && cp <= HANGUL_SEND) {
+		return ((cp - HANGUL_SBASE) % HANGUL_TCOUNT == 0) ? GCB_LV : GCB_LVT;
+	}
 
     /* Binary search in property table */
     int low = 0;
@@ -1242,16 +1254,16 @@ static gcb_property get_gcb(uint32_t cp) {
         } else if (cp > GCB_RANGES[mid].end) {
             low = mid + 1;
         } else {
-            return (gcb_property)GCB_RANGES[mid].property;
+            return (enum gcb_property)GCB_RANGES[mid].property;
         }
     }
     return GCB_OTHER;
 }
 
-/* Extended_Pictographic check for GB11 (emoji ZWJ sequences) */
+/* Extended_Pictographic check for GB11 (emoji ZWJ sequences).
+ * Uses double-width ranges which include Extended_Pictographic. */
 static int is_extended_pictographic(uint32_t cp) {
-    /* Reuse the double-width table which includes Extended_Pictographic */
-    return unicode_range_contains(cp, DOUBLE_WIDTH_RANGES, DOUBLE_WIDTH_COUNT);
+	return unicode_range_contains(cp, DOUBLE_WIDTH_RANGES, DOUBLE_WIDTH_COUNT);
 }
 
 /* InCB Linker check for GB9c (binary search in sorted array) */
@@ -1283,8 +1295,8 @@ static int is_incb_consonant(uint32_t cp) {
  * incb_state: 0 = not in sequence, 1 = seen Consonant, 2 = seen Consonant+Linker
  */
 static int is_grapheme_break(
-    gcb_property prev_prop,
-    gcb_property curr_prop,
+    enum gcb_property prev_prop,
+    enum gcb_property curr_prop,
     int ri_count,
     int in_ext_pict,
     uint32_t curr_cp,
@@ -1554,7 +1566,7 @@ int utflite_next_grapheme(const char *text, int length, int offset) {
         return length;
     }
 
-    gcb_property prev_prop = get_gcb(prev_cp);
+    enum gcb_property prev_prop = get_gcb(prev_cp);
     int ri_count = (prev_prop == GCB_REGIONAL_INDICATOR) ? 1 : 0;
     int in_ext_pict = is_extended_pictographic(prev_cp);
 
@@ -1565,7 +1577,7 @@ int utflite_next_grapheme(const char *text, int length, int offset) {
     while (next_offset < length) {
         uint32_t curr_cp;
         bytes = utflite_decode(text + next_offset, length - next_offset, &curr_cp);
-        gcb_property curr_prop = get_gcb(curr_cp);
+        enum gcb_property curr_prop = get_gcb(curr_cp);
 
         /* Check for break */
         if (is_grapheme_break(prev_prop, curr_prop, ri_count, in_ext_pict,
@@ -1617,19 +1629,18 @@ int utflite_prev_grapheme(const char *text, int offset) {
         return 0;
     }
 
-    /*
-     * Strategy: scan forward from a safe point to find grapheme boundaries,
-     * then return the last one before 'offset'.
-     * Limit backward scan to ~64 codepoints (covers any reasonable grapheme).
-     */
-    int scan_start = prev_start;
-    int max_backtrack = 64;
-    while (max_backtrack > 0 && scan_start > 0) {
-        int prev = utflite_prev_char(text, scan_start);
-        if (prev == scan_start) break;
-        scan_start = prev;
-        max_backtrack--;
-    }
+	/*
+	 * Strategy: scan forward from a safe point to find grapheme boundaries,
+	 * then return the last one before 'offset'.
+	 */
+	int scan_start = prev_start;
+	int remaining = GRAPHEME_MAX_BACKTRACK;
+	while (remaining > 0 && scan_start > 0) {
+		int prev = utflite_prev_char(text, scan_start);
+		if (prev == scan_start) break;
+		scan_start = prev;
+		remaining--;
+	}
 
     /* Scan forward from scan_start, tracking grapheme boundaries */
     int curr = scan_start;
