@@ -1,8 +1,13 @@
 # utflite
 
-A lightweight, zero-dependency UTF-8 library for C.
+A lightweight, zero-dependency UTF-8 library for C. See [UTF-8 Everywhere](https://utf8everywhere.org/) for why UTF-8 is the recommended encoding for all text.
 
 ## News
+
+### v1.5.0 (December 2025)
+- Added detailed documentation for `utflite__is_extended_pictographic()` explaining GB11 behavior
+- Added complexity documentation for `utflite_prev_grapheme()` (O(k) where k ≤ 128)
+- Documented that double-width table is used as Extended_Pictographic approximation for GB11
 
 ### v1.4.0 (December 2025)
 - Code compliance with CODING_STANDARDS.md (removed typedefs, added named constants)
