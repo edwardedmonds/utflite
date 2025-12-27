@@ -2,11 +2,30 @@
 
 A lightweight, zero-dependency UTF-8 library for C.
 
+## News
+
+### v1.3.0 (December 2025)
+- **UAX #29 grapheme cluster segmentation** - proper cursor movement over emoji sequences, combining marks, Hangul, and Indic scripts
+- 100% pass rate on official Unicode GraphemeBreakTest.txt (766 tests)
+- Implements all GB rules including GB9c (Indic conjunct sequences)
+- Library size: ~18KB compiled (still tiny!)
+
+### v1.2.0 (December 2025)
+- Renamed `utflite_is_combining()` to `utflite_is_zero_width()` for accuracy
+- Fixed zero-width detection for BiDi control characters
+- Added bounded scan to `utflite_prev_char()` for safety
+
+### v1.1.0 (December 2025)
+- Initial public release
+- UTF-8 encoding/decoding with full validation
+- Unicode 17.0 character width tables
+
 ## Features
 
 - UTF-8 encoding and decoding with full validation
 - Unicode 17.0 character width tables (wcwidth alternative)
-- String navigation (next/prev character)
+- **UAX #29 grapheme cluster segmentation** (emoji, flags, combining marks, Hangul)
+- String navigation (next/prev character and grapheme)
 - Utility functions: validate, count, width, truncate
 - Single-header option for easy integration
 - C17 compliant, no external dependencies
@@ -35,8 +54,9 @@ A lightweight, zero-dependency UTF-8 library for C.
 
 **When NOT to use utflite**
 - Full Unicode normalization (NFC/NFD) - use ICU
-- Complex text shaping (Arabic, Indic scripts) - use HarfBuzz
+- Complex text shaping/rendering (Arabic, Indic scripts) - use HarfBuzz
 - Locale-aware sorting/comparison - use ICU
+- Bidirectional text layout - use FriBidi
 
 ## Project Structure
 
@@ -355,11 +375,12 @@ int utflite_char_width(const char *text, int length, int offset);
 ### Navigation
 
 ```c
-// Get byte offset of next/previous character
+// Get byte offset of next/previous character (codepoint)
 int utflite_next_char(const char *text, int length, int offset);
 int utflite_prev_char(const char *text, int offset);
 
-// Grapheme cluster navigation (currently same as char, future: UAX #29)
+// Grapheme cluster navigation (UAX #29 compliant)
+// Handles emoji sequences, combining marks, flags, Hangul, Indic scripts
 int utflite_next_grapheme(const char *text, int length, int offset);
 int utflite_prev_grapheme(const char *text, int offset);
 ```

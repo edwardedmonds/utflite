@@ -1144,6 +1144,62 @@ static const gcb_range GCB_RANGES[] = {
 };
 #define GCB_RANGE_COUNT (sizeof(GCB_RANGES) / sizeof(GCB_RANGES[0]))
 
+/*
+ * InCB (Indic_Conjunct_Break) property tables for GB9c rule.
+ * Linkers are virama characters that join consonants in Indic scripts.
+ */
+static const uint32_t INCB_LINKERS[] = {
+    0x094D, 0x09CD, 0x0ACD, 0x0B4D, 0x0C4D, 0x0D4D, 0x1039, 0x103A,
+    0x1714, 0x1715, 0x17D2, 0x1A60, 0x1B44, 0x1BAA, 0x1BAB, 0xA806,
+    0xA8C4, 0xA9C0, 0xAAF6, 0x10A3F, 0x11046, 0x110B9, 0x11133, 0x11134,
+    0x111C0, 0x11235, 0x1134D, 0x11442, 0x114C2, 0x115BF, 0x1163F, 0x116B6,
+    0x1172B, 0x11839, 0x119E0, 0x11A34, 0x11A47, 0x11A99, 0x11C3F, 0x11D45,
+    0x11D97, 0x11F41, 0x11F42,
+};
+#define INCB_LINKER_COUNT (sizeof(INCB_LINKERS) / sizeof(INCB_LINKERS[0]))
+
+/* InCB Consonant ranges */
+static const utflite_unicode_range INCB_CONSONANTS[] = {
+    {0x0915, 0x0939}, {0x0958, 0x095F}, {0x0978, 0x097F}, {0x0995, 0x09A8},
+    {0x09AA, 0x09B0}, {0x09B2, 0x09B2}, {0x09B6, 0x09B9}, {0x09DC, 0x09DD},
+    {0x09DF, 0x09E1}, {0x09F0, 0x09F1}, {0x0A15, 0x0A28}, {0x0A2A, 0x0A30},
+    {0x0A32, 0x0A33}, {0x0A35, 0x0A36}, {0x0A38, 0x0A39}, {0x0A59, 0x0A5C},
+    {0x0A5E, 0x0A5E}, {0x0A72, 0x0A74}, {0x0A95, 0x0AA8}, {0x0AAA, 0x0AB0},
+    {0x0AB2, 0x0AB3}, {0x0AB5, 0x0AB9}, {0x0AE0, 0x0AE1}, {0x0B15, 0x0B28},
+    {0x0B2A, 0x0B30}, {0x0B32, 0x0B33}, {0x0B35, 0x0B39}, {0x0B5C, 0x0B5D},
+    {0x0B5F, 0x0B61}, {0x0B71, 0x0B71}, {0x0B95, 0x0B95}, {0x0B99, 0x0B9A},
+    {0x0B9C, 0x0B9C}, {0x0B9E, 0x0B9F}, {0x0BA3, 0x0BA4}, {0x0BA8, 0x0BAA},
+    {0x0BAE, 0x0BB9}, {0x0C15, 0x0C28}, {0x0C2A, 0x0C39}, {0x0C58, 0x0C5A},
+    {0x0C5D, 0x0C5D}, {0x0C60, 0x0C61}, {0x0C95, 0x0CA8}, {0x0CAA, 0x0CB3},
+    {0x0CB5, 0x0CB9}, {0x0CDD, 0x0CDE}, {0x0CE0, 0x0CE1}, {0x0D15, 0x0D3A},
+    {0x0D54, 0x0D56}, {0x0D5F, 0x0D61}, {0x0D7A, 0x0D7F}, {0x1000, 0x1025},
+    {0x1027, 0x1027}, {0x1029, 0x102A}, {0x1050, 0x1055}, {0x105A, 0x105D},
+    {0x1061, 0x1061}, {0x1065, 0x1066}, {0x106E, 0x1070}, {0x1075, 0x1081},
+    {0x108E, 0x108E}, {0x1703, 0x170C}, {0x170E, 0x1711}, {0x1780, 0x17A2},
+    {0x17A5, 0x17A7}, {0x17A9, 0x17B3}, {0x1901, 0x1922}, {0x1930, 0x1931},
+    {0x1950, 0x196D}, {0x1980, 0x19A9}, {0x19C1, 0x19C7}, {0x1A00, 0x1A16},
+    {0x1A20, 0x1A4C}, {0x1B05, 0x1B33}, {0x1B83, 0x1BA0}, {0xA807, 0xA80A},
+    {0xA80C, 0xA822}, {0xA882, 0xA8B3}, {0xA90A, 0xA925}, {0xA930, 0xA946},
+    {0xA989, 0xA98B}, {0xA98D, 0xA9B2}, {0xAA00, 0xAA28}, {0xAA60, 0xAA6F},
+    {0xAA71, 0xAA76}, {0xAAE0, 0xAAEA}, {0x10A00, 0x10A00}, {0x10A10, 0x10A13},
+    {0x10A15, 0x10A17}, {0x10A19, 0x10A35}, {0x11005, 0x11037}, {0x11071, 0x11072},
+    {0x11075, 0x11075}, {0x11083, 0x110AF}, {0x11107, 0x1112B}, {0x11150, 0x11172},
+    {0x11183, 0x111B2}, {0x111C1, 0x111C4}, {0x11200, 0x11211}, {0x11213, 0x1122B},
+    {0x1123F, 0x11240}, {0x11284, 0x11286}, {0x11288, 0x11288}, {0x1128A, 0x1128D},
+    {0x1128F, 0x1129D}, {0x1129F, 0x112A8}, {0x11305, 0x1130C}, {0x1130F, 0x11310},
+    {0x11313, 0x11328}, {0x1132A, 0x11330}, {0x11332, 0x11333}, {0x11335, 0x11339},
+    {0x1135D, 0x11361}, {0x11400, 0x11434}, {0x11447, 0x1144A}, {0x11481, 0x114AF},
+    {0x114C4, 0x114C5}, {0x114C7, 0x114C7}, {0x11580, 0x115AE}, {0x115D8, 0x115DB},
+    {0x11600, 0x1162F}, {0x11644, 0x11644}, {0x11680, 0x116AA}, {0x116B8, 0x116B8},
+    {0x11700, 0x1171A}, {0x11800, 0x1182B}, {0x11912, 0x11935}, {0x11937, 0x11938},
+    {0x119A0, 0x119A7}, {0x119AA, 0x119D0}, {0x11A0B, 0x11A32}, {0x11A5C, 0x11A89},
+    {0x11C00, 0x11C08}, {0x11C0A, 0x11C2E}, {0x11C72, 0x11C8F}, {0x11D00, 0x11D06},
+    {0x11D08, 0x11D09}, {0x11D0B, 0x11D30}, {0x11D60, 0x11D65}, {0x11D67, 0x11D68},
+    {0x11D6A, 0x11D89}, {0x11EE0, 0x11EF2}, {0x11F02, 0x11F02}, {0x11F04, 0x11F10},
+    {0x11F12, 0x11F33},
+};
+#define INCB_CONSONANT_COUNT (sizeof(INCB_CONSONANTS) / sizeof(INCB_CONSONANTS[0]))
+
 /* ============================================================================
  * Internal Helpers
  * ============================================================================ */
@@ -1198,16 +1254,41 @@ static int is_extended_pictographic(uint32_t cp) {
     return unicode_range_contains(cp, DOUBLE_WIDTH_RANGES, DOUBLE_WIDTH_COUNT);
 }
 
+/* InCB Linker check for GB9c (binary search in sorted array) */
+static int is_incb_linker(uint32_t cp) {
+    int low = 0;
+    int high = INCB_LINKER_COUNT - 1;
+    while (low <= high) {
+        int mid = (low + high) / 2;
+        if (cp < INCB_LINKERS[mid]) {
+            high = mid - 1;
+        } else if (cp > INCB_LINKERS[mid]) {
+            low = mid + 1;
+        } else {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* InCB Consonant check for GB9c */
+static int is_incb_consonant(uint32_t cp) {
+    return unicode_range_contains(cp, INCB_CONSONANTS, INCB_CONSONANT_COUNT);
+}
+
 /*
  * Determine if there's a grapheme cluster break between two codepoints.
  * Implements UAX #29 extended grapheme cluster rules (GB3-GB13, GB999).
+ *
+ * incb_state: 0 = not in sequence, 1 = seen Consonant, 2 = seen Consonant+Linker
  */
 static int is_grapheme_break(
     gcb_property prev_prop,
     gcb_property curr_prop,
     int ri_count,
     int in_ext_pict,
-    uint32_t curr_cp
+    uint32_t curr_cp,
+    int incb_state
 ) {
     /* GB3: CR × LF */
     if (prev_prop == GCB_CR && curr_prop == GCB_LF) {
@@ -1254,6 +1335,12 @@ static int is_grapheme_break(
 
     /* GB9b: Prepend × */
     if (prev_prop == GCB_PREPEND) {
+        return 0;
+    }
+
+    /* GB9c: Indic conjunct sequences - don't break before Consonant
+     * if we've seen Consonant + [Extend|Linker]* + Linker */
+    if (incb_state == 2 && is_incb_consonant(curr_cp)) {
         return 0;
     }
 
@@ -1471,6 +1558,9 @@ int utflite_next_grapheme(const char *text, int length, int offset) {
     int ri_count = (prev_prop == GCB_REGIONAL_INDICATOR) ? 1 : 0;
     int in_ext_pict = is_extended_pictographic(prev_cp);
 
+    /* InCB state for GB9c: 0=none, 1=seen Consonant, 2=seen Consonant+Linker */
+    int incb_state = is_incb_consonant(prev_cp) ? 1 : 0;
+
     /* Loop through following characters */
     while (next_offset < length) {
         uint32_t curr_cp;
@@ -1478,7 +1568,8 @@ int utflite_next_grapheme(const char *text, int length, int offset) {
         gcb_property curr_prop = get_gcb(curr_cp);
 
         /* Check for break */
-        if (is_grapheme_break(prev_prop, curr_prop, ri_count, in_ext_pict, curr_cp)) {
+        if (is_grapheme_break(prev_prop, curr_prop, ri_count, in_ext_pict,
+                              curr_cp, incb_state)) {
             return next_offset;
         }
 
@@ -1495,6 +1586,16 @@ int utflite_next_grapheme(const char *text, int length, int offset) {
         } else if (curr_prop != GCB_EXTEND && curr_prop != GCB_ZWJ) {
             in_ext_pict = 0;
         }
+
+        /* Track InCB state for GB9c */
+        if (is_incb_consonant(curr_cp)) {
+            incb_state = 1;
+        } else if (is_incb_linker(curr_cp) && incb_state >= 1) {
+            incb_state = 2;
+        } else if (curr_prop != GCB_EXTEND && curr_prop != GCB_ZWJ) {
+            incb_state = 0;
+        }
+        /* else: Extend/ZWJ keeps the current incb_state */
 
         prev_cp = curr_cp;
         prev_prop = curr_prop;
