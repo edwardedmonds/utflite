@@ -1,7 +1,7 @@
 /*
  * utflite.h - Lightweight UTF-8 handling library
  *
- * Unicode 15.0 compliant UTF-8 encoding/decoding with character width support.
+ * Unicode 17.0 compliant UTF-8 encoding/decoding with character width support.
  * Zero external dependencies beyond standard C.
  *
  * Usage:

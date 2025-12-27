@@ -5,7 +5,7 @@ A lightweight, zero-dependency UTF-8 library for C.
 ## Features
 
 - UTF-8 encoding and decoding with full validation
-- Unicode 15.0 character width tables (wcwidth alternative)
+- Unicode 17.0 character width tables (wcwidth alternative)
 - String navigation (next/prev character)
 - Utility functions: validate, count, width, truncate
 - Single-header option for easy integration
